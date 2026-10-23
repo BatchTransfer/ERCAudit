@@ -29,7 +29,13 @@ docker run --rm ercaudit ercaudit run --size 100      # unified run on the bundl
 docker run --rm ercaudit python -m pytest -q          # 28 tests
 ```
 
-## Web service
+## Live demo (no installation)
+
+**https://batchtransfer.github.io/ERCAudit/** runs the analyzer in your browser (Pyodide). Paste or upload a Solidity file and get the
+findings of every applicable rule set. The source never leaves your machine. The page is the static site in `docs/`
+(`python scripts/build_site.py` rebuilds `docs/app/`).
+
+## Web service (server version)
 
 A small web page and API (`web/`) audits a pasted Solidity file with every applicable rule set. Run it with
 `docker compose up -d --build` and open the host you configured; see [`docs/WEBSITE.md`](docs/WEBSITE.md) for the deployment on a Linux server.

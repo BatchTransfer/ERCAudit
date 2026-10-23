@@ -1,0 +1,8 @@
+{
+ "Batch transfer without address validation": "examples/vuln_missing_address_validation.sol",
+ "Batch transfer without array-length check": "examples/vuln_missing_array_length_check.sol",
+ "Batch transfer without caller check": "examples/vuln_missing_access_control.sol",
+ "Compliant batch transfer": "examples/compliant.sol",
+ "Replayable permit (R3, R6, R8)": "examples/permit_replayable.sol",
+ "Safe permit": "examples/permit_safe.sol"
+}

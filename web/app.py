@@ -17,6 +17,8 @@ from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
 
+from ercaudit.webcore import CONSTRAINT_TEXT, RULE_REQ, applicability
+
 ROOT = Path(__file__).resolve().parents[1]
 MAX_BYTES = 300 * 1024
 TIMEOUT_S = 25
@@ -32,27 +34,6 @@ EXAMPLES = {
     "Compliant batch transfer": "examples/batch/compliant.sol",
     "Replayable permit (R3, R6, R8)": "examples/domain/permit_replayable.sol",
     "Safe permit": "examples/domain/permit_safe.sol",
-}
-CONSTRAINT_TEXT = {
-    "sender_check": "the caller must be the token holder or an approved operator",
-    "approval_check": "an operator must be approved by the holder",
-    "zero_address_check": "the recipient must not be the zero address",
-    "length_matching_check": "ids and amounts must have the same length",
-    "transfer_batch_event_found": "a TransferBatch event must be emitted",
-    "event_emission_order": "TransferBatch must be emitted after the transfer",
-    "to_isContract_check": "a contract recipient must be detected",
-    "on_received_check": "a contract recipient must acknowledge the transfer (onERC1155BatchReceived)",
-}
-RULE_REQ = {
-    "R1": "the signed digest must contain a domain separator and the 0x1901 typed-data prefix",
-    "R2": "the domain must include the chain ID",
-    "R3": "the chain ID must not be a fixed constant",
-    "R4": "a chain ID passed at deployment must equal the deployed chain (decided on chain)",
-    "R5": "the domain must include the verifying contract address",
-    "R6": "the verifier must be address(this), not a hard-coded address",
-    "R7": "a verifier passed at deployment must be the contract itself (decided on chain)",
-    "R8": "a stored domain separator must be recomputed when the chain or verifier changes",
-    "R9": "the salt must not be zero or shared by all deployments",
 }
 _hits = defaultdict(deque)
 _lock = threading.Lock()
@@ -73,13 +54,6 @@ def rate_limited():
             return True
         q.append(now)
     return False
-
-
-def applicability(code):
-    return {
-        "batch": "safeBatchTransferFrom" in code,
-        "domain": bool(re.search(r"DOMAIN_SEPARATOR|EIP712|permit\s*\(|domainSeparator|eip712Domain", code, re.I)),
-    }
 
 
 def audit_source(code):

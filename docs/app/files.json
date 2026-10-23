@@ -1,0 +1,1 @@
+["ercaudit/__init__.py", "ercaudit/solidity.py", "ercaudit/webcore.py", "ercaudit/batchaudit/__init__.py", "ercaudit/batchaudit/analyzer.py", "ercaudit/batchaudit/constraints.py", "ercaudit/batchaudit/taxonomy.py", "ercaudit/batchaudit/evaluation.py", "ercaudit/domaudit/__init__.py", "ercaudit/domaudit/analyzer.py", "ercaudit/domaudit/rules.py"]

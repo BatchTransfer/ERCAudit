@@ -39,3 +39,7 @@ def test_audit_command_on_examples(capsys):
     assert all(rule in out for rule in ("R3", "R6", "R8"))
     assert pipeline.audit(str(ex / "batch" / "vuln_missing_address_validation.sol")) == 1
     assert "Missing Address Validation" in capsys.readouterr().out
+    from ercaudit.webcore import audit_text
+    res = audit_text((ex / "domain" / "permit_replayable.sol").read_text())
+    assert [f["rule"] for f in res["findings"]] == ["R3", "R6", "R8"] and res["exit_status"] == 1
+    assert audit_text((ex / "batch" / "compliant.sol").read_text())["findings"] == []

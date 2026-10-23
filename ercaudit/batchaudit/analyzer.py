@@ -10,7 +10,10 @@ from __future__ import annotations
 import json
 import os
 import signal
-from concurrent.futures import ProcessPoolExecutor
+try:
+    from concurrent.futures import ProcessPoolExecutor
+except ImportError:  # browsers (Pyodide) have no multiprocessing; only the corpus driver needs it
+    ProcessPoolExecutor = None
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional
 
