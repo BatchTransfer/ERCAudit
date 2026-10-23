@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Synthetic example for ERCAudit/DomAudit, modelled on Listing 1 of the DomAudit paper:
+// Synthetic example for ERCAudit, modelled on the signing-domain study:
 // the domain hard-codes chainId (R3), binds a foreign verifier (R6) and is cached (R8).
 pragma solidity ^0.8.20;
 

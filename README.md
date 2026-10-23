@@ -29,6 +29,11 @@ docker run --rm ercaudit ercaudit run --size 100      # unified run on the bundl
 docker run --rm ercaudit python -m pytest -q          # 28 tests
 ```
 
+## Web service
+
+A small web page and API (`web/`) audits a pasted Solidity file with every applicable rule set. Run it with
+`docker compose up -d --build` and open the host you configured; see [`docs/WEBSITE.md`](docs/WEBSITE.md) for the deployment on a Linux server.
+
 ## Quick start (about 2 minutes, offline)
 
 ```bash

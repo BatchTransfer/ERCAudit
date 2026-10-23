@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERCAudit: audit an ERC contract</title>
+<meta name="description" content="Paste a Solidity contract and check ERC-1155 batch transfers and EIP-712 / ERC-2612 signing domains against ten risk classes.">
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mute:#5d6572;--line:#dfe3e8;--accent:#2457c5;--accent-ink:#fff;
+        --crit:#b42318;--high:#c2410c;--med:#a16207;--ok:#157f3b;--code:#f0f2f5}
+  @media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaee;--mute:#9aa3b2;--line:#2a2f3a;
+        --accent:#6b9bff;--accent-ink:#0b1020;--crit:#ff8a80;--high:#ffab70;--med:#f4c95d;--ok:#6dd58c;--code:#12151b}}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+  header{padding:34px 0 18px} h1{margin:0 0 6px;font-size:30px;letter-spacing:-.01em}
+  .tag{color:var(--mute);margin:0;max-width:760px} .pill{display:inline-block;font-size:12.5px;padding:2px 10px;border:1px solid var(--line);border-radius:99px;color:var(--mute);margin-bottom:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  select,button,input[type=file]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+  button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600;cursor:pointer}
+  button.primary:disabled{opacity:.6;cursor:wait} button.ghost{cursor:pointer}
+  textarea{width:100%;min-height:320px;resize:vertical;font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+           background:var(--code);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:12px;tab-size:4}
+  .hint{color:var(--mute);font-size:14px;margin:8px 0 0}
+  .status{display:flex;align-items:center;gap:10px;font-weight:600;margin-bottom:10px}
+  .chip{padding:2px 12px;border-radius:99px;font-size:14px;font-weight:700;border:1px solid currentColor}
+  .chip.bad{color:var(--crit)} .chip.good{color:var(--ok)}
+  table{width:100%;border-collapse:collapse;font-size:15px} th,td{text-align:left;padding:9px 10px;border-top:1px solid var(--line);vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);border-top:0}
+  .sev{font-weight:700;white-space:nowrap} .Critical{color:var(--crit)} .High{color:var(--high)} .Medium{color:var(--med)}
+  code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 6px;border-radius:5px}
+  .err{color:var(--crit);font-weight:600} .muted{color:var(--mute)}
+  details{margin:8px 0} summary{cursor:pointer;font-weight:600}
+  ul.classes{columns:2;column-gap:28px;padding-left:18px;margin:8px 0} @media(max-width:700px){ul.classes{columns:1}}
+  footer{padding:24px 0 40px;color:var(--mute);font-size:14px} a{color:var(--accent)}
+  .skip{position:absolute;left:-999px} .skip:focus{left:8px;top:8px;background:var(--card);padding:6px 10px;z-index:5}
+</style>
+</head>
+<body>
+<a class="skip" href="#src">Skip to the input</a>
+<div class="wrap">
+<header>
+  <span class="pill">ICSE 2027 · Tool Demonstrations</span>
+  <h1>ERCAudit</h1>
+  <p class="tag">Specification-guided auditing of ERC implementations. Paste a Solidity contract to check ERC-1155 batch transfers and EIP-712 / ERC-2612 signing domains against ten risk classes.</p>
+</header>
+
+<main>
+<section class="card" aria-labelledby="in">
+  <h2 id="in" style="margin:0 0 12px;font-size:19px">1. Choose or paste a contract</h2>
+  <div class="row">
+    <label for="ex" class="muted">Example</label>
+    <select id="ex"><option value="">Select an example</option>{% for e in examples %}<option>{{ e }}</option>{% endfor %}</select>
+    <label for="file" class="muted">or upload a .sol file</label>
+    <input id="file" type="file" accept=".sol,text/plain">
+  </div>
+  <textarea id="src" spellcheck="false" placeholder="// Paste Solidity source here (up to 300 KB)"></textarea>
+  <div class="row" style="margin-top:12px">
+    <button id="go" class="primary">Audit contract</button>
+    <button id="clear" class="ghost" type="button">Clear</button>
+    <span id="msg" class="muted" role="status"></span>
+  </div>
+  <p class="hint">Your source is analysed in memory and deleted immediately. It is never stored or logged. Please do not submit code you are not allowed to share.</p>
+</section>
+
+<section class="card" id="result" hidden aria-live="polite" aria-labelledby="out">
+  <h2 id="out" style="margin:0 0 10px;font-size:19px">2. Findings</h2>
+  <div class="status"><span id="chip" class="chip"></span><span id="summary"></span></div>
+  <div id="table"></div>
+  <p class="hint" id="note"></p>
+</section>
+
+<section class="card">
+  <h2 style="margin:0 0 6px;font-size:19px">What ERCAudit checks</h2>
+  <p class="muted" style="margin-top:0">Ten risk classes, 17 rules. A finding is a violated constraint with its source location, not a proven exploit.</p>
+  <ul class="classes">
+    <li><strong>Batch transfers (ERC-1155):</strong> missing access control, address validation, array-length check, event consistency, interface (receiver) check</li>
+    <li><strong>Signing domains (EIP-712, ERC-2612):</strong> R1 missing separator, R2 missing chain ID, R3 hard-coded chain ID, R4 deployed chain ID, R5 missing verifier, R6 hard-coded verifier, R7 external verifier, R8 stored separator, R9 hard-coded salt</li>
+  </ul>
+  <details><summary>Limits of this service</summary>
+    <p class="muted">The analysis is source-level and uses a lightweight front-end without a compiler, so unusual formatting, deep inheritance and inline assembly can cause misses or false positives. Rules R4 and R7 depend on deployment values and are reported as candidates. The on-chain verification of the paper needs network access and is not part of this web service.</p></details>
+</section>
+</main>
+
+<footer>
+  <a href="https://github.com/BatchTransfer/ERCAudit">Source code, data and Docker image</a> ·
+  <a href="https://github.com/BatchTransfer/ERCAudit/tree/main/video">Demo video</a> ·
+  <a href="https://github.com/BatchTransfer/ERCAudit/blob/main/README.md">README</a>
+</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+$('ex').addEventListener('change', async e => {
+  if (!e.target.value) return;
+  const r = await fetch('/api/example?name=' + encodeURIComponent(e.target.value));
+  if (r.ok) { $('src').value = (await r.json()).source; $('result').hidden = true; }
+});
+$('file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader(); rd.onload = () => { $('src').value = rd.result; $('result').hidden = true; }; rd.readAsText(f);
+});
+$('clear').addEventListener('click', () => { $('src').value = ''; $('result').hidden = true; $('ex').value = ''; $('msg').textContent = ''; });
+$('go').addEventListener('click', async () => {
+  const src = $('src').value; if (!src.trim()) { $('msg').textContent = 'Paste or choose a contract first.'; return; }
+  $('go').disabled = true; $('msg').textContent = 'Analysing...';
+  try {
+    const r = await fetch('/api/audit', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({source: src})});
+    const d = await r.json();
+    $('result').hidden = false;
+    if (!r.ok) { $('chip').textContent = ''; $('chip').className = 'chip'; $('summary').innerHTML = '<span class="err">' + esc(d.error || 'Error') + '</span>'; $('table').innerHTML = ''; $('note').textContent = ''; return; }
+    const bad = d.findings.length > 0;
+    $('chip').textContent = bad ? 'Findings' : 'No finding'; $('chip').className = 'chip ' + (bad ? 'bad' : 'good');
+    $('summary').textContent = bad ? d.findings.length + ' finding' + (d.findings.length > 1 ? 's' : '') + ' (exit status 1)' : 'No violated constraint (exit status 0)';
+    if (bad) {
+      $('table').innerHTML = '<table><thead><tr><th>Severity</th><th>Rule set</th><th>Risk</th><th>Violated requirement</th><th>Where</th></tr></thead><tbody>' +
+        d.findings.map(f => '<tr><td class="sev ' + esc(f.severity) + '">' + esc(f.severity) + '</td><td>' + (f.module === 'batch' ? 'Batch transfer' : 'Signing domain') +
+          '</td><td>' + (f.rule ? '<code>' + esc(f.rule) + '</code> ' : '') + esc(f.risk) + '</td><td>' + esc(f.explanation) + '</td><td>' + (f.lines ? 'lines ' + esc(f.lines) : (f['class'] ? esc(f['class']) : '')) + '</td></tr>').join('') + '</tbody></table>';
+    } else { $('table').innerHTML = ''; }
+    const a = d.applicable;
+    $('note').textContent = (!a.batch && !a.domain)
+      ? 'This file does not look like an ERC-1155 batch transfer or an EIP-712 / ERC-2612 domain, so no rule set applied.'
+      : 'Rule sets applied: ' + [a.batch ? 'batch transfer' : null, a.domain ? 'signing domain' : null].filter(Boolean).join(' and ') + '. Analysis took ' + d.elapsed_ms + ' ms.';
+  } catch (err) { $('result').hidden = false; $('summary').innerHTML = '<span class="err">Network error. Please try again.</span>'; }
+  finally { $('go').disabled = false; $('msg').textContent = ''; }
+});
+</script>
+</body>
+</html>

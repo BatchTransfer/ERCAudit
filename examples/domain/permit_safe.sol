@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Synthetic example for ERCAudit/DomAudit: domain recomputed from the active chain and address(this).
+// Synthetic example for ERCAudit/ERCAudit: domain recomputed from the active chain and address(this).
 pragma solidity ^0.8.20;
 
 contract SafePermitToken {

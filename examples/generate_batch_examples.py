@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate the synthetic BatchAudit examples (one compliant template + single-defect mutants).
+"""Generate the synthetic batch-transfer examples (one compliant template + single-defect mutants).
 
-The template follows Listing 1 of the BatchAudit paper. Each mutant removes exactly
+The template follows Listing 1 of the batch-transfer study. Each mutant removes exactly
 one check, so the analyzer must report exactly the corresponding constraint.
 These are *test inputs written for this artifact*, not deployed contracts.
 """

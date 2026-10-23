@@ -1,0 +1,8 @@
+# Automatic HTTPS (Let's Encrypt) for the host name in $DOMAIN. For a plain-HTTP test use DOMAIN=http://your-server-ip
+{$DOMAIN:localhost} {
+	encode gzip
+	request_body {
+		max_size 400KB
+	}
+	reverse_proxy web:8000
+}
