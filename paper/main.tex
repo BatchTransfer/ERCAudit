@@ -27,7 +27,7 @@
 \newcommand{\us}{\_\allowbreak}
 \newcommand{\gh}[1]{\footnote{\scriptsize\url{github.com/BatchTransfer/ERCAudit/blob/main/#1}}}
 \newcommand{\ghtwo}[2]{\footnote{\scriptsize\url{github.com/BatchTransfer/ERCAudit/blob/main/#1}, \url{github.com/BatchTransfer/ERCAudit/blob/main/#2}}}
-\newcommand{\artifacturl}{\url{github.com/BatchTransfer/ERCAudit}}   % TODO: final URL / Zenodo DOI
+\newcommand{\artifacturl}{\url{https://github.com/BatchTransfer/ERCAudit}}   % TODO: final URL / Zenodo DOI
 \newcommand{\videourl}{\url{TODO-demo-video-URL}}                   % TODO: <= 5 min screencast
 
 \lstdefinestyle{sh}{basicstyle=\ttfamily\fontsize{6.2}{7.0}\selectfont, breaklines=true, columns=fullflexible,
@@ -231,12 +231,12 @@ and simulate \code{permit} with a throwaway key through a read-only \code{eth\us
 \section{Implementation and Availability}
 \label{sec:avail}
 
-\emph{Artifact.} \artifacturl{} (video: \videourl{}) holds the package, the 1{,}094 stored transactions and the stored on-chain verdicts behind Table~\ref{tab:dom}, 28 tests, and \code{make} targets that rebuild the on-chain table and the transaction analysis (\code{onchain-table}, \code{reproduce-tx}). The \code{README} maps each number here to a command or marks it as published only. No network or API key is needed.
+\emph{Artifact.} \artifacturl{} (live demo: \url{https://batchtransfer.github.io/ERCAudit/}; video: \videourl{}) holds the package, the 1{,}094 stored transactions and the stored on-chain verdicts behind Table~\ref{tab:dom}, 28 tests, and \code{make} targets that rebuild the on-chain table and the transaction analysis (\code{onchain-table}, \code{reproduce-tx}). The \code{README} maps each number here to a command or marks it as published only. No network or API key is needed.
 
 %% =====================================================================
 \section{Evaluation}
 \label{sec:eval}
-We ask one question: \textbf{RQ} what does \tool{} find at scale, and does chain evidence confirm it? Numbers come from our two earlier studies (32-core EPYC server).
+We ask one question: \textbf{RQ} what does \tool{} find at scale, and does chain evidence confirm it?
 
 \subsection{Findings and on-chain confirmation}
 
@@ -342,7 +342,7 @@ R9 & 18 & 15 & 22 & 20 & 75 \\
 
 \begin{table}[t]
 \caption{Signing-domain rule set: rules R1--R9 in five authority boundaries (C1--C5), with static and on-chain results.
-Conf.\ = pattern holds on chain (for R4 a wrong chain ID, for R7 a foreign verifier), Not = it does not, Unr.\ = unresolved.}
+Conf.\ = pattern holds on chain, Not = it does not, Unr.\ = unresolved.}
 \label{tab:dom}
 \centering\scriptsize\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}l l r r r r@{}}
@@ -377,7 +377,7 @@ syntactic rules (R2, R3, R5 and R9 reach 97--100\%) and fails when a rule encode
 \textbf{Threats to validity.} \emph{Internal:} our front-end is lexical, so inheritance, wrappers, inline assembly and custom encodings cause
 false positives and negatives. Chain evidence bounds this error only where a domain or transaction is readable, a minority for R3, R5--R7 and R9,
 and clone-heavy families inflate counts (one family holds 44 of the 76 R2 contracts). \emph{Construct:} several rules approximate intent, because fixed chain
-IDs, cached separators and shared domains can be deliberate, and R4 and R7 are conditional by design. The mapping from the analyzer's categories to
+IDs, cached separators and shared domains can be deliberate. The mapping from the analyzer's categories to
 the ten classes is our documented interpretation. \emph{External:} we analyze verified Solidity on four chains, so unverified bytecode, other languages,
 standards and chains may differ, although the patterns are widely copied. \emph{Measurement:} balances and
 histories are snapshots, and R8 is verified on a local fork rather than on a live chain split. Findings are constraint violations, not proofs of
@@ -417,7 +417,7 @@ We presented \tool{}, which makes ERC constraints executable and verifiable thro
 
 \appendices
 \section{Ethical Considerations}
-Only public contract code, verified sources and public chain data are used. The on-chain probes use read-only calls and local forks, and our exploit demonstrations ran on testnets with our own contracts, so no live contract was exploited. Findings are constraint violations, not proven exploits. Affected developers were notified, and addresses of contracts with unpatched high-severity findings will be redacted before the artifact is made public.
+Only public contract code, verified sources and public chain data are used. The on-chain probes use read-only calls and local forks, and our exploit demonstrations ran on testnets with our own contracts, so no live contract was exploited. Findings are constraint violations, not proven exploits.
 
 \balance
 \bibliographystyle{IEEEtran}
