@@ -19,8 +19,10 @@ docker compose up -d --build
 curl https://your.host.name/healthz        # {"status":"ok"}
 ```
 
-Without a host name, set `DOMAIN=http://SERVER_IP` in `.env` to serve plain HTTP, or skip Caddy and start only the app:
-`docker compose up -d --build web` with `WEB_BIND=0.0.0.0` (the app listens on port 8000).
+Without a host name, set `DOMAIN=http://SERVER_IP` in `.env` to serve plain HTTP. For a quick test of the app alone (port 8000, no HTTPS):
+`docker compose -f docker-compose.yml -f docker-compose.direct.yml up -d --build web` (set `WEB_BIND=0.0.0.0` to reach it from another machine).
+Ports 80 and 443 must be free and reachable from the internet, because Let's Encrypt checks the host name on port 80. If they are taken,
+set `HTTP_PORT` and `HTTPS_PORT` in `.env`; without a reachable port 80 the certificate cannot be issued.
 
 ## Keep it online
 - `restart: unless-stopped` restarts the containers after a crash or reboot; run `sudo systemctl enable docker` once.

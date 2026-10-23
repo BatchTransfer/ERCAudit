@@ -1,0 +1,6 @@
+# Optional: publish the app itself (no HTTPS) for a quick test.
+#   docker compose -f docker-compose.yml -f docker-compose.direct.yml up -d web      then open http://SERVER:8000
+services:
+  web:
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:8000:8000"
