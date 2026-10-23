@@ -28,7 +28,7 @@
 \newcommand{\gh}[1]{\footnote{\scriptsize\url{github.com/BatchTransfer/ERCAudit/blob/main/#1}}}
 \newcommand{\ghtwo}[2]{\footnote{\scriptsize\url{github.com/BatchTransfer/ERCAudit/blob/main/#1}, \url{github.com/BatchTransfer/ERCAudit/blob/main/#2}}}
 \newcommand{\artifacturl}{\url{https://github.com/BatchTransfer/ERCAudit}}   % TODO: final URL / Zenodo DOI
-\newcommand{\videourl}{\url{TODO-demo-video-URL}}                   % TODO: <= 5 min screencast
+\newcommand{\videourl}{\url{https://www.youtube.com/watch?v=bvV_QXwJlp4}}                   % TODO: <= 5 min screencast
 
 \lstdefinestyle{sh}{basicstyle=\ttfamily\fontsize{6.2}{7.0}\selectfont, breaklines=true, columns=fullflexible,
   keepspaces=true, xleftmargin=0pt, showstringspaces=false, aboveskip=2pt, belowskip=0pt, frame=tb, framerule=0.2pt,
@@ -228,15 +228,12 @@ match proves which fields the live domain binds), fork the chain twice with a di
 and simulate \code{permit} with a throwaway key through a read-only \code{eth\us call} (R1).\gh{ercaudit/txaudit/patterns.py}
 
 %% =====================================================================
-\section{Implementation and Availability}
-\label{sec:avail}
-
-\emph{Artifact.} \artifacturl{} (live demo: \url{https://batchtransfer.github.io/ERCAudit/}; video: \videourl{}) holds the package, the 1{,}094 stored transactions and the stored on-chain verdicts behind Table~\ref{tab:dom}, 28 tests, and \code{make} targets that rebuild the on-chain table and the transaction analysis (\code{onchain-table}, \code{reproduce-tx}). The \code{README} maps each number here to a command or marks it as published only. No network or API key is needed.
 
 %% =====================================================================
 \section{Evaluation}
 \label{sec:eval}
-We ask one question: \textbf{RQ} what does \tool{} find at scale, and does chain evidence confirm it?
+\emph{Artifact.} \artifacturl{} (video: \videourl{}).\footnote{\scriptsize Live demo, runs in the browser: \url{https://batchtransfer.github.io/ERCAudit/}}
+Our study explores: \textbf{RQ} what does \tool{} find at scale, and does chain evidence confirm it?
 
 \subsection{Findings and on-chain confirmation}
 
