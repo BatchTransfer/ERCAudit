@@ -1,0 +1,140 @@
+{
+    "custom_functions": [
+        {
+            "function": "onERC1155Received(address,address,uint256,uint256,bytes)",
+            "hash": "f23a6e61"
+        },
+        {
+            "function": "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)",
+            "hash": "bc197c81"
+        },
+        {
+            "function": "uri(uint256)",
+            "hash": "0e89341c"
+        },
+        {
+            "function": "toString(uint256)",
+            "hash": "6900a3ae"
+        },
+        {
+            "function": "toHexString(uint256)",
+            "hash": "8fba8d5c"
+        },
+        {
+            "function": "toHexString(uint256,uint256)",
+            "hash": "63e1cbea"
+        },
+        {
+            "function": "isContract(address)",
+            "hash": "16279055"
+        },
+        {
+            "function": "sendValue(address,uint256)",
+            "hash": "24a084df"
+        },
+        {
+            "function": "functionCall(address,bytes)",
+            "hash": "a0b5ffb0"
+        },
+        {
+            "function": "functionCall(address,bytes,string)",
+            "hash": "241b5886"
+        },
+        {
+            "function": "functionCallWithValue(address,bytes,uint256)",
+            "hash": "2a011594"
+        },
+        {
+            "function": "functionCallWithValue(address,bytes,uint256,string)",
+            "hash": "d525ab8a"
+        },
+        {
+            "function": "functionStaticCall(address,bytes)",
+            "hash": "c21d36f3"
+        },
+        {
+            "function": "functionStaticCall(address,bytes,string)",
+            "hash": "dbc40fb9"
+        },
+        {
+            "function": "functionDelegateCall(address,bytes)",
+            "hash": "ee33b7e2"
+        },
+        {
+            "function": "functionDelegateCall(address,bytes,string)",
+            "hash": "57387df0"
+        },
+        {
+            "function": "_verifyCallResult(bool,bytes,string)",
+            "hash": "18c2c6a2"
+        },
+        {
+            "function": "_msgSender()",
+            "hash": "119df25f"
+        },
+        {
+            "function": "_msgData()",
+            "hash": "8b49d47e"
+        },
+        {
+            "function": "_setURI(string)",
+            "hash": "f392d4f5"
+        },
+        {
+            "function": "_mint(address,uint256,uint256,bytes)",
+            "hash": "2ca6f4da"
+        },
+        {
+            "function": "_mintBatch(address,uint256[],uint256[],bytes)",
+            "hash": "b6ea6b0a"
+        },
+        {
+            "function": "_burn(address,uint256,uint256)",
+            "hash": "464a5ffb"
+        },
+        {
+            "function": "_burnBatch(address,uint256[],uint256[])",
+            "hash": "f3323d3c"
+        },
+        {
+            "function": "_beforeTokenTransfer(address,address,address,uint256[],uint256[],bytes)",
+            "hash": "fe49010b"
+        },
+        {
+            "function": "_doSafeTransferAcceptanceCheck(address,address,address,uint256,uint256,bytes)",
+            "hash": "084e9e24"
+        },
+        {
+            "function": "_doSafeBatchTransferAcceptanceCheck(address,address,address,uint256[],uint256[],bytes)",
+            "hash": "e51c223d"
+        },
+        {
+            "function": "_asSingletonArray(uint256)",
+            "hash": "136ad9d4"
+        },
+        {
+            "function": "initOwner(address)",
+            "hash": "0d009297"
+        },
+        {
+            "function": "transferOwnership(address)",
+            "hash": "f2fde38b"
+        },
+        {
+            "function": "claimOwnership()",
+            "hash": "4e71e0c8"
+        },
+        {
+            "function": "mint(string,uint256)",
+            "hash": "056b01ce"
+        },
+        {
+            "function": "burn(address,uint256,uint256)",
+            "hash": "f5298aca"
+        },
+        {
+            "function": "_setTokenURI(uint256,string)",
+            "hash": "01538868"
+        }
+    ]
+}

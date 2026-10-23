@@ -1,0 +1,135 @@
+{
+  "size": 200,
+  "batchaudit": {
+    "files": 200,
+    "analysable": 174,
+    "flagged_contracts": 48,
+    "errors": {
+      "No valid implementations found (possibly due to recursive ca": 4,
+      "safeBatchTransferFrom function not found": 22
+    },
+    "class_observations": {
+      "Missing Access Control": 6,
+      "Missing Interface Check": 41,
+      "Missing Address Validation": 12,
+      "Event Emit Inconsistencies": 8,
+      "Missing Array Length Check": 15
+    },
+    "labelled": 193,
+    "confusion": {
+      "tp": 32,
+      "fp": 9,
+      "fn": 9,
+      "tn": 143,
+      "precision": 0.7805,
+      "recall": 0.7805,
+      "f1": 0.7805
+    },
+    "class_contracts": {
+      "Missing Access Control": 6,
+      "Missing Interface Check": 38,
+      "Missing Address Validation": 11,
+      "Event Emit Inconsistencies": 7,
+      "Missing Array Length Check": 12
+    }
+  },
+  "txaudit": {
+    "transactions": 200,
+    "safeBatchTransferFrom": 200,
+    "setApprovalForAll": 0,
+    "unauthorized": 2,
+    "zero_address": 0,
+    "length_mismatch": 0,
+    "secondary_approval_starts": 0,
+    "contracts": 10,
+    "parity_with_stored_analysis": {
+      "unauthorized": true,
+      "zero_address": true,
+      "length_mismatch": true
+    },
+    "transactions_to_statically_flagged_contracts": 200
+  },
+  "domaudit": {
+    "files": 200,
+    "flagged_contracts": 175,
+    "rule_observations": {
+      "R1": 26,
+      "R2": 20,
+      "R3": 29,
+      "R4": 28,
+      "R5": 24,
+      "R6": 8,
+      "R7": 15,
+      "R8": 100,
+      "R9": 20
+    },
+    "labelled": 180,
+    "labelled_still_flagged": 157,
+    "true_positives": 132,
+    "precision": 0.8408,
+    "precision_by_class": {
+      "C1": {
+        "tp": 25,
+        "flagged": 26
+      },
+      "C2": {
+        "tp": 36,
+        "flagged": 40
+      },
+      "C3": {
+        "tp": 19,
+        "flagged": 31
+      },
+      "C4": {
+        "tp": 34,
+        "flagged": 40
+      },
+      "C5": {
+        "tp": 18,
+        "flagged": 20
+      }
+    },
+    "onchain_on_findings": {
+      "R1": {
+        "confirmed": 16,
+        "refuted": 6,
+        "not probed": 2,
+        "unresolved": 2
+      },
+      "R2": {
+        "unresolved": 6,
+        "confirmed": 14
+      },
+      "R3": {
+        "unresolved": 19,
+        "confirmed": 10
+      },
+      "R4": {
+        "not probed": 28
+      },
+      "R5": {
+        "unresolved": 17,
+        "confirmed": 7
+      },
+      "R6": {
+        "refuted": 6,
+        "unresolved": 1,
+        "confirmed": 1
+      },
+      "R7": {
+        "unresolved": 11,
+        "confirmed": 3,
+        "refuted": 1
+      },
+      "R8": {
+        "unresolved": 70,
+        "confirmed": 29,
+        "refuted": 1
+      },
+      "R9": {
+        "confirmed": 1,
+        "unresolved": 19
+      }
+    }
+  }
+}

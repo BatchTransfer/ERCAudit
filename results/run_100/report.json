@@ -1,0 +1,121 @@
+{
+  "size": 100,
+  "batchaudit": {
+    "files": 100,
+    "analysable": 88,
+    "flagged_contracts": 36,
+    "errors": {
+      "No valid implementations found (possibly due to recursive ca": 3,
+      "safeBatchTransferFrom function not found": 9
+    },
+    "class_observations": {
+      "Missing Access Control": 4,
+      "Missing Interface Check": 31,
+      "Missing Address Validation": 7,
+      "Event Emit Inconsistencies": 5,
+      "Missing Array Length Check": 12
+    },
+    "labelled": 93,
+    "confusion": {
+      "tp": 25,
+      "fp": 4,
+      "fn": 7,
+      "tn": 57,
+      "precision": 0.8621,
+      "recall": 0.7812,
+      "f1": 0.8197
+    },
+    "class_contracts": {
+      "Missing Access Control": 4,
+      "Missing Interface Check": 28,
+      "Missing Address Validation": 6,
+      "Event Emit Inconsistencies": 4,
+      "Missing Array Length Check": 9
+    }
+  },
+  "txaudit": {
+    "transactions": 100,
+    "safeBatchTransferFrom": 100,
+    "setApprovalForAll": 0,
+    "unauthorized": 2,
+    "zero_address": 0,
+    "length_mismatch": 0,
+    "secondary_approval_starts": 0,
+    "contracts": 10,
+    "parity_with_stored_analysis": {
+      "unauthorized": true,
+      "zero_address": true,
+      "length_mismatch": true
+    },
+    "transactions_to_statically_flagged_contracts": 100
+  },
+  "domaudit": {
+    "files": 100,
+    "flagged_contracts": 89,
+    "rule_observations": {
+      "R1": 12,
+      "R2": 20,
+      "R3": 17,
+      "R4": 6,
+      "R5": 24,
+      "R6": 3,
+      "R7": 5,
+      "R8": 45,
+      "R9": 0
+    },
+    "labelled": 80,
+    "labelled_still_flagged": 72,
+    "true_positives": 63,
+    "precision": 0.875,
+    "precision_by_class": {
+      "C1": {
+        "tp": 12,
+        "flagged": 12
+      },
+      "C2": {
+        "tp": 18,
+        "flagged": 20
+      },
+      "C3": {
+        "tp": 17,
+        "flagged": 20
+      },
+      "C4": {
+        "tp": 16,
+        "flagged": 20
+      }
+    },
+    "onchain_on_findings": {
+      "R1": {
+        "confirmed": 9,
+        "refuted": 3
+      },
+      "R2": {
+        "unresolved": 6,
+        "confirmed": 14
+      },
+      "R3": {
+        "unresolved": 13,
+        "confirmed": 4
+      },
+      "R4": {
+        "not probed": 6
+      },
+      "R5": {
+        "unresolved": 17,
+        "confirmed": 7
+      },
+      "R6": {
+        "refuted": 3
+      },
+      "R7": {
+        "unresolved": 5
+      },
+      "R8": {
+        "unresolved": 36,
+        "confirmed": 9
+      },
+      "R9": {}
+    }
+  }
+}

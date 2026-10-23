@@ -1,0 +1,23 @@
+{
+  "_comment": "Verified-source ERC-1155 corpora behind Table IV of the BatchAudit paper (paths relative to the repository root). The full corpora live in legacy/; a release should archive them separately (Zenodo) and point these entries at the extracted directory.",
+  "batchaudit": {
+    "ethereum": "legacy/erc-classify-original/DATA/ERC1155-ethereum/ERC1155",
+    "bsc": "legacy/erc-classify-original/DATA/ERC1155-binance/bsc_ERC1155",
+    "polygon": "legacy/erc-classify-original/DATA/ERC1155-polygon/polygon_ERC1155",
+    "avalanche": "legacy/erc-classify-original/DATA/ERC1155-avalanche/avalanche_ERC1155"
+  },
+  "paper_reported": {
+    "table_iv_available_code": {"ethereum": 5608, "bsc": 1666, "polygon": 1898, "avalanche": 103},
+    "table_iv_batch_transfer_contracts": {"ethereum": 9914, "bsc": 6803, "polygon": 17666, "avalanche": 1023},
+    "table_v_findings": {
+      "missing_access_control":       {"ethereum": 35,  "bsc": 9,  "polygon": 3,  "avalanche": 0},
+      "missing_address_validation":   {"ethereum": 143, "bsc": 21, "polygon": 48, "avalanche": 1},
+      "missing_array_length_check":   {"ethereum": 105, "bsc": 13, "polygon": 55, "avalanche": 2},
+      "event_emission_inconsistency": {"ethereum": 163, "bsc": 0,  "polygon": 5,  "avalanche": 0},
+      "missing_interface_check":      {"ethereum": 146, "bsc": 36, "polygon": 44, "avalanche": 2},
+      "gas_related":                  {"ethereum": 59,  "bsc": 11, "polygon": 14, "avalanche": 0}
+    },
+    "ground_truth": {"labelled": 941, "true_noncompliant": 41, "tool_flagged": 46, "true_positive": 37,
+                     "precision": 0.804, "recall": 0.902}
+  }
+}

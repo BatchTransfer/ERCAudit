@@ -1,0 +1,10 @@
+# Runtime (analysers + offline transaction validation)
+pandas>=1.5
+requests>=2.28
+# On-chain collection (optional): .env loading for ETHERSCAN_API_KEY
+python-dotenv>=1.0
+# Tests (the regression test executes the original research script, which imports these)
+pytest>=7
+eth-utils>=2.0
+eth-hash[pycryptodome]>=0.5
+matplotlib

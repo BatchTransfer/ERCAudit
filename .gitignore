@@ -1,0 +1,18 @@
+.env
+.venv/
+*.pyc
+__pycache__/
+.pytest_cache/
+*.egg-info/
+.DS_Store
+# large generated per-contract outputs; the small reports (report.md/json, findings.csv) are tracked
+results/run_*/batchaudit.json
+results/run_*/domaudit.json
+results/run_*/txaudit.csv
+results/run_*/run_info.json
+results/tables/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg

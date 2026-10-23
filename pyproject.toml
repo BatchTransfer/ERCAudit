@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ercaudit"
+version = "0.1.0"
+description = "ERCAudit: specification-guided auditing of ERC implementations (ERC-1155 batch transfers, EIP-712/ERC-2612 signing domains) with on-chain validation"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["pandas>=1.5", "requests>=2.28"]
+
+[project.optional-dependencies]
+onchain = ["python-dotenv>=1.0"]
+selectors = ["eth-utils>=2.0", "eth-hash[pycryptodome]>=0.5"]
+test = ["pytest>=7", "eth-utils>=2.0", "eth-hash[pycryptodome]>=0.5", "matplotlib"]
+
+[project.scripts]
+ercaudit = "ercaudit.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ercaudit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

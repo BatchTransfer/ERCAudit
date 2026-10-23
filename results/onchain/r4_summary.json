@@ -1,0 +1,10 @@
+{
+  "_provenance": "Per-contract R4 records (output of scripts/maintainer/onchain_r31_verify.py) are not part of the artifact; this is the published summary table of the DomAudit study (on-chain verification of R4 contracts, 1,151 unique addresses).",
+  "rule": "R4",
+  "by_chain": {
+    "ethereum":  {"flagged": 500, "correct": 450, "wrong_id": 12, "unresolved": 38},
+    "binance":   {"flagged": 531, "correct": 466, "wrong_id": 5,  "unresolved": 60},
+    "polygon":   {"flagged": 92,  "correct": 51,  "wrong_id": 10, "unresolved": 31},
+    "avalanche": {"flagged": 28,  "correct": 12,  "wrong_id": 2,  "unresolved": 14}
+  }
+}

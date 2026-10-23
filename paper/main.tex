@@ -1,0 +1,426 @@
+%% ERCAudit -- ICSE tool paper. Format: IEEE conference, 10pt (IEEEtran), PDF, at most 4 pages INCLUDING references.
+%% Compile: pdflatex main.tex (twice) or tectonic -X compile main.tex. The bibliography is embedded.
+%% The paper presents ONE tool (ERCAudit).
+%% TODO before submission: \videourl, author list/affiliations, anonymisation if the track is double-blind, artifact DOI.
+\documentclass[10pt,conference]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+\def\UrlBreaks{\do\/\do\_\do\-\do\.}
+\Urlmuskip=0mu plus 1mu\relax
+\usepackage{balance}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usepackage{array}
+\usepackage{wasysym}
+\usepackage{makecell}
+\usepackage{wasysym}
+\usepackage{colortbl}
+\usetikzlibrary{arrows.meta,positioning,calc,fit}
+
+\newcommand{\tool}{\textsc{ERCAudit}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\us}{\_\allowbreak}
+\newcommand{\gh}[1]{\footnote{\scriptsize\url{github.com/BatchTransfer/ERCAudit/blob/main/#1}}}
+\newcommand{\ghtwo}[2]{\footnote{\scriptsize\url{github.com/BatchTransfer/ERCAudit/blob/main/#1}, \url{github.com/BatchTransfer/ERCAudit/blob/main/#2}}}
+\newcommand{\artifacturl}{\url{github.com/BatchTransfer/ERCAudit}}   % TODO: final URL / Zenodo DOI
+\newcommand{\videourl}{\url{TODO-demo-video-URL}}                   % TODO: <= 5 min screencast
+
+\lstdefinestyle{sh}{basicstyle=\ttfamily\fontsize{6.2}{7.0}\selectfont, breaklines=true, columns=fullflexible,
+  keepspaces=true, xleftmargin=0pt, showstringspaces=false, aboveskip=2pt, belowskip=0pt, frame=tb, framerule=0.2pt,
+  rulecolor=\color{black!50}}
+
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}\setlength{\floatsep}{5pt plus 2pt minus 2pt}\setlength{\intextsep}{5pt plus 2pt minus 2pt}\setlength{\abovecaptionskip}{2pt}\setlength{\skip\footins}{5pt plus 2pt minus 2pt}
+\begin{document}
+
+\title{\tool: Specification-Guided Auditing of ERC\\Implementations from Standards to Deployed Contracts}
+
+% \author{\IEEEauthorblockN{Ashok Kasthuri}
+% \IEEEauthorblockA{Singapore Management University, Singapore\\ashokk.2022@phdcs.smu.edu.sg}}
+
+\maketitle
+
+\pagestyle{plain}
+\thispagestyle{plain}
+
+\begin{abstract}
+ERC standards describe token and signing behaviour in prose, so their security-critical requirements stay implicit: who may move
+tokens, what a recipient must acknowledge, and which chain and contract a signature binds. A single missing validation in a batch
+transfer can misdirect or destroy many tokens at once. A signing domain that omits or mis-builds its binding lets the same valid
+signature be accepted by an unintended contract or chain, even though the signer is recovered correctly. We present \tool{}, an open-source tool that turns these requirements into source-level checks and validates the findings on chain,
+behind one command and one report. \tool{} reports \textbf{ten risk classes}: five for ERC-1155 batch transfers (eight constraints) and five
+authority boundaries for EIP-712/ERC-2612 signing domains (nine rules, R1--R9). On-chain analysis---transaction replay, separator recomputation and a chain-ID fork test---confirms or refutes each finding. In our study of four EVM chains, \tool{} identified 35{,}406 batch-transfer
+implementations, 915 of which are reported to contain errors, and analysed 148{,}517 permit-related contracts, reporting 19{,}298 risks.
+On-chain evidence confirms, for example, 26 deployed tokens whose \code{permit} checks no signature and 97\% of the decidable stale-separator
+cases. Code, data and video: \artifacturl{}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+smart contracts, ERC standards, static analysis, specification-guided auditing, on-chain validation
+\end{IEEEkeywords}
+
+%% =====================================================================
+\section{Introduction}
+ERC standards define how tokens and signatures should behave on Ethereum, but a standard is only a written description and a code interface, so nothing forces an implementation to follow it.
+The compiler checks the interface and leaves the properties that protect users to the implementer. An ERC-1155 batch transfer must
+authenticate the caller, reject the zero address, compare array lengths and confirm that a contract recipient accepted the
+tokens~\cite{erc1155:misc}. An EIP-712 verifier must bind a signature to the active chain and to itself~\cite{eip712,eip2612}.
+These violations are silent because the contract still compiles and moves tokens. One omitted check can affect many assets in one call, and a wrongly bound
+signing domain lets one valid signature authorize an action on another contract or chain.
+
+General-purpose analyzers~\cite{feist2019slither,tsankov2018securify,luu2016making} look for generic defects and do not encode these ERC-specific
+constraints. We present \tool{} to address this gap. \textbf{Contributions.}
+\begin{itemize}
+\item \textbf{Problem and rules.} We turn the specifications into constraints for ERC implementations: eight for batch transfers and, for signatures, nine source-level rules in five authority boundaries, which together give ten risk classes.
+\item \textbf{\tool{}.} We build one specification-guided static analyzer with a shared front-end that follows transfer logic and domain construction across helpers, initializers, and cached state, and reports each finding with its rule, class, severity, and evidence in one schema.
+\item \textbf{Large-scale study and dataset.} In our study we analyze 35{,}406 batch-transfer implementations (915 risks) and 148{,}517 permit-related contracts (19{,}298 risks) on four chains, report verified findings, and demonstrate controlled testnet exploits and a replay.
+\item \textbf{On-chain verification.} We check flagged contracts against deployed state and real executions by replaying batch-transfer transactions, rebuilding separators, decoding deployment arguments, simulating permits, and forking chains under a changed identifier.
+
+\end{itemize}
+
+
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+    font=\scriptsize,
+    >=Latex,
+    lifeline/.style={dashed, gray!60, line width=0.45pt},
+    actor/.style={draw, rounded corners, fill=gray!8, minimum width=1.35cm, minimum height=0.55cm, align=center},
+    verifier/.style={draw, rounded corners, fill=blue!5, minimum width=1.45cm, minimum height=0.55cm, align=center},
+    msg/.style={->, line width=0.55pt},
+    obs/.style={->, dashed, line width=0.5pt},
+    bad/.style={->, red!75!black, line width=0.75pt},
+    note/.style={draw, rounded corners, fill=yellow!12, text width=3.9cm, align=center, inner sep=3pt}
+]
+\node[actor]    (p1) at (0,0) {$P_1$\\Signer};
+\node[verifier] (vs) at (2.1,0) {$V_S$\\Source};
+\node[actor]    (a)  at (4.2,0) {Attacker};
+\node[verifier] (vt) at (6.3,0) {$V_T$\\Target};
+\node[actor]    (st) at (8.4,0) {State\\Effect};
+\foreach \n in {p1,vs,a,vt,st} { \draw[lifeline] (\n.south) -- ++(0,-4.3); }
+\draw[msg] (p1.south |- 0,-1.0) -- node[above,align=center] {1. sign $\sigma$\\for $\mathcal{A}_S$} (vs.south |- 0,-1.0);
+\draw[obs] (vs.south |- 0,-1.5) -- node[above,align=center] {2. observe\\payload} (a.south |- 0,-1.5);
+\draw[bad] (a.south |- 0,-2.2) -- node[above,align=center,text=red!75!black] {3. replay\\$m,\sigma$} (vt.south |- 0,-2.2);
+\node[note] at (5.25,-3.15) {$V_T$ accepts iff $\delta_T=\delta_S$\\and local checks pass.};
+\draw[bad] (vt.south |- 0,-4.05) -- node[above,align=center,text=red!75!black] {4. approve\\/ execute} (st.south |- 0,-4.05);
+\end{tikzpicture}%
+}
+\caption{Authority-boundary replay. The target recovers the correct signer in the wrong authority context.}
+\label{fig:replay}
+\end{figure}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{fig_overview.pdf}
+\caption{Overview of \tool{}: from the specifications to ten risk classes and 17 rules, their evaluation on two corpora, on-chain verification and proof-of-concept experiments.}
+\label{fig:overview}
+\end{figure*}
+
+
+
+
+\section{Threat Model for Signing Domains}
+The batch-transfer rules follow from the ERC-1155 specification (Table~\ref{tab:batch}) and the model below is for signing domains.
+
+
+\textbf{Adversary.} The attacker obtains a valid typed-data signature $\sigma=(v,r,s)$ and its signed message $m$, for example from public calldata or a relay workflow, or from any other channel the signed payload travels through. The attacker can deploy contracts and submit arbitrary transactions. The attacker cannot forge signatures, steal keys, alter deployed code, or skip the target's own checks, which include signer recovery, nonce, and deadline~\cite{meisami2025sigscope}. A violation is therefore a \emph{replay condition} and not an exploit, because exploitation also needs a state-changing target that accepts the replayed authorization.
+
+\textbf{Replay condition.} Let the signer intend authority context $\mathcal{A}_S$ for a source verifier $V_S$, and let a target verifier $V_T$ operate in context $\mathcal{A}_T$. A context bundles the four boundaries a signature should respect: $\mathcal{A}=\langle \mathit{chain},\mathit{verifier},\mathit{freshness},\mathit{logicalDomain}\rangle$, where \emph{freshness} covers deployment, proxy, upgrade, and cache state. Replay at $V_T$ succeeds iff
+\begin{equation}
+\label{eq:failure}
+\mathcal{A}_S\neq\mathcal{A}_T\;\land\;\delta_{\mathcal{A}_S}(m)=\delta_{\mathcal{A}_T}(m)\;\land\;\textsc{LocalChecks}_{V_T}(m,\sigma),
+\end{equation}
+where $\delta_{\mathcal{A}}(m)=H(\texttt{0x1901}\parallel D(\mathcal{A})\parallel\texttt{hashStruct}(m))$ and \textsc{LocalChecks} covers nonce, deadline, and signer recovery. Nonces are local to each verifier, so consuming a nonce at $V_S$ does not consume it at $V_T$ (Figure~\ref{fig:replay}). Equivalently, let $W(\sigma)$ be the contexts the signer intends and $C(\sigma)$ the contexts in which deployed verifiers accept $\sigma$. Security requires $C(\sigma)\subseteq W(\sigma)$, and a \emph{signature-construction failure} is any verifier that accepts $\sigma$ outside $W(\sigma)$. Signer recovery proves \emph{who} signed and domain construction decides \emph{where} the signature is valid.
+
+
+
+\begin{figure}[t]
+  \centering
+\includegraphics[width=0.5\textwidth,height=1.1cm]{workflow.png}
+  \caption{Canonical batch-transfer workflow}
+  \label{figure:bg}
+\end{figure}
+
+
+%% =====================================================================
+\section{Design}
+\label{sec:design}
+\textbf{Overview (Fig.~\ref{fig:overview}).} \tool{} works in five steps. (1)~\emph{Specifications}: we derive constraints from the text of
+ERC-1155 and ERC-721, EIP-712/191 and ERC-2612/1271/5267, and from a study of how these standards depend on each other.\gh{data/specifications/final_basic_erc_specifications.json} We evaluate rule sets for ERC-1155 and EIP-712/ERC-2612.
+(2)~\emph{Security analysis}: we group the requirements into ten risk classes and 17 rules (eight batch-transfer constraints and nine signing-domain
+rules).\ghtwo{ercaudit/batchaudit/constraints.py}{ercaudit/domaudit/rules.py} (3)~\emph{Evaluation}: we run the rules on 35{,}406 batch-transfer implementations (915 risks) and 148{,}517 permit-related contracts (19{,}298
+risks). (4)~\emph{On-chain verification}: we check flagged contracts against deployed state and real transactions. (5)~\emph{Proof of concept}:
+our testnet experiments show a replay accepted under a correct signer and a wrong domain, and batch-transfer errors that burn or misroute tokens.
+
+\begin{table}[t]
+\caption{Batch-transfer rule set: the eight rules of ERC-1155 \code{safeBatchTransferFrom} and the risk class each populates.}
+\label{tab:batch}
+\centering\scriptsize\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}l l >{\raggedright\arraybackslash}p{3.2cm}@{}}
+\toprule
+Risk class & Rule & Formal definition\\\midrule
+B1 access control & Authorization & $\textit{sender}=\textit{from}\ \lor$ \textit{isApprovedForAll(from, sender)}\\
+B2 address validation & Recipient validity & $\textit{to}\neq 0\text{x}0$\\
+-- & Balance sufficiency & $\forall i:\textit{balanceOf(from,id}_i)\!\geq\!\textit{val}_i$\\
+B3 array-length check & Array integrity & $|\overrightarrow{\textit{ids}}|=|\overrightarrow{\textit{values}}|>0$\\
+-- & Atomicity & $\mathcal{S}'=\mathcal{S}$ if any internal transfer fails\\
+B4 event inconsistency & Event emission & emit \textit{TransferBatch}(\ldots) after the transfer\\
+B5 interface check & Interface compliance & $\mathrm{IsContract}(\textit{to})\Rightarrow$ receiver returns magic value\\
+-- & Gas efficiency & $\mathcal{G}(\overrightarrow{\textit{ids}})\leq \mathcal{G}_{\text{block}}$ $\wedge$ $\mathcal{G}(\overrightarrow{\textit{ids}})\leq\sum_i\mathcal{G}(\textit{id}_i)$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+\caption{Signing-domain rules R1--R9 in five authority boundaries (classes). R4 and R7 are conditional and decided on chain.}
+\label{tab:domain-risk-rules}
+\centering\scriptsize\setlength{\tabcolsep}{2pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\begin{tabular}{@{}L{3.3cm} L{4.8cm}@{}}
+\toprule
+Rule & Requirement\\\midrule
+\rowcolor{black!12}\multicolumn{2}{l}{\textbf{C1 Domain separation}}\\
+\hspace{1.4em}R1 Missing separator & Digest has separator and \code{0x1901} prefix\\
+\rowcolor{black!12}\multicolumn{2}{l}{\textbf{C2 Chain binding}}\\
+\hspace{1.4em}R2 Missing \code{chainId} & Domain includes the chain ID\\
+\hspace{1.4em}R3 Hard-coded \code{chainId} & Chain ID is not a fixed constant\\
+\hspace{1.4em}R4 Deployed \code{chainId} & Passed ID equals the deployed chain\\
+\rowcolor{black!12}\multicolumn{2}{l}{\textbf{C3 Verifier binding}}\\
+\hspace{1.4em}R5 Missing verifier & Domain includes the verifier address\\
+\hspace{1.4em}R6 Hard-coded verifier & Verifier is \code{address(this)}, not a literal\\
+\hspace{1.4em}R7 External verifier & Passed verifier is the contract itself\\
+\rowcolor{black!12}\multicolumn{2}{l}{\textbf{C4 Domain freshness}}\\
+\hspace{1.4em}R8 Stored separator & Recomputed when context changes\\
+\rowcolor{black!12}\multicolumn{2}{l}{\textbf{C5 Logical domain}}\\
+\hspace{1.4em}R9 Hard-coded salt & Salt is not zero or shared\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{From specification to constraints.} A rule set defines the \emph{facts} we extract, the boolean \emph{constraints} over
+them, the mapping to \emph{risk classes} with severity, and the \emph{evidence} we report. Our batch-transfer rule set encodes the
+eight constraints of Table~\ref{tab:batch}, which follow the canonical batch-transfer workflow of Fig.~\ref{figure:bg}. Five of them (1, 2, 4, 6, 7) are checked statically through eight source-level predicates and
+populate the five classes B1--B5. Our signing-domain rule set encodes nine rules on how a contract builds, stores and exposes its
+EIP-712 domain (Table~\ref{tab:dom}), grouped into five authority boundaries C1--C5. Together they give \textbf{ten risk classes}. Two
+domain rules (R4, R7) are \emph{conditional}, because their safety depends on a value passed at deployment, so we report them as
+candidates for chain checks.
+
+\textbf{Pipeline.} P1 selects candidates from bytecode by 4-byte selector: \code{0x2eb2c2d6} for batch transfers,
+\code{0xd505accf} for \code{permit}, and \code{0x3644e515}, \code{0x84b0196e}, \code{0x1626ba7e} for domain, metadata and ERC-1271. P2 recovers functions by
+brace matching and follows a bounded call graph. P3 extracts the
+predicates that guard state changes (\code{require}, \code{if}$\ldots$\code{revert}) and facts such as aliases of \code{ids.length}, the
+\code{chainId} and verifier placed in the domain, and whether the separator is cached or recomputed. P4 evaluates the rule set on the entry point and
+its callees, so a check delegated to a helper still counts, and P5 maps violations to classes, severities and evidence. P2--P4 need no compiler, so they also run on
+flattened or multi-file Etherscan sources that the local toolchain cannot build.
+
+\textbf{On-chain analysis.} Static findings say that a check is absent but not whether the deployed contract is affected, so we validate them on chain. For batch transfers we
+fetch the \code{txlist} of flagged ERC-1155 contracts, decode the calldata offline and test three patterns: zero-address recipients,
+length mismatch, and callers without a recorded approval. We also follow \code{setApprovalForAll} chains. For signing domains,
+the deployed contract holds the answer. Our probes read or rebuild \code{DOMAIN\us SEPARATOR} with candidate field layouts (a keccak
+match proves which fields the live domain binds), fork the chain twice with a different chain ID (R8), decode deployment arguments (R4),
+and simulate \code{permit} with a throwaway key through a read-only \code{eth\us call} (R1).\gh{ercaudit/txaudit/patterns.py}
+
+%% =====================================================================
+\section{Implementation and Availability}
+\label{sec:avail}
+
+\emph{Artifact.} \artifacturl{} (video: \videourl{}) holds the package, the 1{,}094 stored transactions and the stored on-chain verdicts behind Table~\ref{tab:dom}, 28 tests, and \code{make} targets that rebuild the on-chain table and the transaction analysis (\code{onchain-table}, \code{reproduce-tx}). The \code{README} maps each number here to a command or marks it as published only. No network or API key is needed.
+
+%% =====================================================================
+\section{Evaluation}
+\label{sec:eval}
+We ask one question: \textbf{RQ} what does \tool{} find at scale, and does chain evidence confirm it? Numbers come from our two earlier studies (32-core EPYC server).
+
+\subsection{Findings and on-chain confirmation}
+
+\begin{table}[t]
+  \centering
+  \caption{Batch Transfer Dataset Overview}
+  \label{tab:wholedataset}
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{|p{1.4cm}|c|c|c|c|}
+    \hline
+    \textbf{Blockchain} &
+    \textbf{\begin{tabular}[c]{@{}c@{}}Batch Transfer\\Count\end{tabular}} &
+    \textbf{TVL} &
+    \textbf{\begin{tabular}[c]{@{}c@{}}Total\\Transactions\end{tabular}} &
+    \textbf{\begin{tabular}[c]{@{}c@{}}Available Code\\Count (\%)\end{tabular}} \\ \hline \hline
+
+    Ethereum & 9,914 & \$3B & 9,772,654 & 5,608 (56.5\%) \\ \hline
+    BNB Chain & 6,803 & \$821M & 1,116,248 & 1,666 (24.5\%) \\ \hline
+    Avalanche & 1,023 & \$94M & 804,341 & 103 (10\%) \\ \hline
+    Polygon & 17,666 & \$693M & 1,204,773 & 1,898 (10.7\%) \\ \hline
+    \textbf{Total} & \textbf{35,406} & \textbf{\$4.6B} & \textbf{12,898,016} & \textbf{9,275 (26.19\%)} \\ \hline
+  \end{tabular}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \caption{Vulnerability Distribution by Type and Blockchain}
+  \label{tab:report}
+  \setlength{\tabcolsep}{2pt} % adjust horizontal spacing
+  \renewcommand{\arraystretch}{1.0} % adjust row height
+  {\scriptsize
+  \begin{tabular}{|p{2.9cm}|c|c|c|c||c|}
+    \hline
+    \textbf{Vulnerabilities} &
+    \textbf{Ethereum} &
+    \textbf{BNB Chain} &
+    \textbf{Avalanche} &
+    \textbf{Polygon} &
+    \textbf{Subtotal} \\ \hline \hline
+
+    Missing Access Control & 35 & 9 & 0 & 3 & 47 \\ \hline
+    Missing Address Validation & 143 & 21 & 1 & 48 & 213 \\ \hline
+    Missing Array Length Check & 105 & 13 & 2 & 55 & 175 \\ \hline
+    Event Emit Inconsistencies & 163 & 0 & 0 & 5 & 168 \\ \hline
+    Missing Interface Check & 146 & 36 & 2 & 44 & 228 \\ \hline
+    Gas-related Vulnerabilities & 59 & 11 & 0 & 14 & 84 \\ \hline \hline
+    Total & 651 & 90 & 5 & 169 & 915 \\ \hline
+  \end{tabular}
+  }
+\end{table}
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Corpus and prevalence. Signature-related, typed-data (EIP-712), and permit (ERC-2612) columns count contracts with the feature, and flagged contracts violate at least one rule.}
+\label{tab:corpus}
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{@{}p{1.2cm}p{1.2cm}p{1cm}p{1cm}p{1cm}p{1cm}r@{}}
+\toprule
+\textbf{Chain} & \textbf{Sig.-rel.} & \textbf{EIP-712} & \textbf{ERC-2612} & \textbf{Verified} & \textbf{Flagged} & \textbf{Rate} \\
+\midrule
+Ethereum  & 65,036  & 61,215  & 46,238 & 36,982  & 3,553  & 9.6\%  \\
+BNB Chain & 105,025 & 102,341 & 84,029 & 52,114  & 7,481  & 14.4\% \\
+Polygon   & 131,583 & 122,699 & 91,780 & 53,375  & 5,194  & 9.7\%  \\
+Avalanche & 21,289  & 20,361  & 17,289 & 6,046   & 1,417  & 23.4\% \\
+\midrule
+\textbf{Total} & \textbf{322,933} & \textbf{306,616} & \textbf{239,336} & \textbf{148,517} & \textbf{17,645} & \textbf{11.9\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Rule-level observations by chain. One contract may appear in several rules. Rule definitions are in Table~\ref{tab:domain-risk-rules}.}
+\label{tab:taxonomy-by-chain}
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{1.6pt}
+\begin{tabular}{p{2cm}p{1cm}p{1.1cm}p{1.1cm}p{1.1cm}p{1.1cm}}
+\toprule
+\textbf{Rule} & \textbf{Ethereum} & \textbf{BNB} & \textbf{Avalanche} & \textbf{Polygon} & \textbf{Total} \\
+\midrule
+\multicolumn{6}{l}{\emph{C1 Domain separation}} \\
+R1 & 10 & 36 & 0 & 5 & 51 \\
+\multicolumn{6}{l}{\emph{C2 Chain binding}} \\
+R2 & 27 & 25 & 4 & 60 & 116 \\
+R3 & 186 & 138 & 16 & 182 & 522 \\
+R4 & 504 & 533 & 28 & 92 & 1{,}157 \\
+\multicolumn{6}{l}{\emph{C3 Verifier binding}} \\
+R5 & 31 & 5 & 0 & 22 & 58 \\
+R6 & 76 & 37 & 6 & 51 & 170 \\
+R7 & 87 & 83 & 14 & 78 & 262 \\
+\multicolumn{6}{l}{\emph{C4 Domain freshness}} \\
+R8 & 3{,}261 & 7{,}285 & 1{,}371 & 4{,}970 & 16{,}887 \\
+\multicolumn{6}{l}{\emph{C5 Logical domain}} \\
+R9 & 18 & 15 & 22 & 20 & 75 \\
+\midrule
+\textbf{Total} & \textbf{4{,}200} & \textbf{8{,}157} & \textbf{1{,}461} & \textbf{5{,}480} & \textbf{19{,}298} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\caption{Signing-domain rule set: rules R1--R9 in five authority boundaries (C1--C5), with static and on-chain results.
+Conf.\ = pattern holds on chain (for R4 a wrong chain ID, for R7 a foreign verifier), Not = it does not, Unr.\ = unresolved.}
+\label{tab:dom}
+\centering\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}l l r r r r@{}}
+\toprule
+Class & Rule & Flagged & Conf. & Not & Unr.\\\midrule
+C1 domain separation & R1 & 51 & 26 & 12 & 13\\
+\multirow{3}{*}{C2 chain binding} & R2 & 116 & 76 & 0 & 40\\
+ & R3 & 522 & 284 & 8 & 230\\
+ & R4 & 1{,}151 & 29 & 979 & 143\\
+\multirow{3}{*}{C3 verifier binding} & R5 & 58 & 15 & 0 & 43\\
+ & R6 & 170 & 6 & 32 & 132\\
+ & R7 & 262 & 72 & 13 & 177\\
+C4 domain freshness & R8 & 16{,}881 & 7{,}438 & 213 & 9{,}230\\
+C5 logical domain & R9 & 75 & 3 & 0 & 72\\\bottomrule
+\end{tabular}
+\end{table}
+
+
+\textbf{Batch transfers.} In our study, \tool{} identified 35{,}406 batch-transfer implementations on four EVM chains (Table~\ref{tab:wholedataset}) and reports 915 of them with errors
+(Table~\ref{tab:report}, with 0.804 sampled precision and 84 manually triaged gas issues). Our transaction replay found 68 secondary-approval
+chains and no observed on-chain exploitation of length mismatches, and two testnet exploits (zero-address burn, length mismatch) show that violations can
+destroy tokens.
+\par\textbf{Signing domains.} Across 148{,}517 verified permit-related sources (Table~\ref{tab:corpus}), we found 17{,}645 contracts (11.9\%) that violate at least one rule, giving
+19{,}298 rule-level observations (Table~\ref{tab:taxonomy-by-chain}), and freshness (R8) dominates by count. The final analyzer keeps 157 of 180 manually labelled flagged contracts
+(89.8\% precision reported). Chain evidence is our principal validation (Table~\ref{tab:dom}). It shows that 26 tokens (25 on BNB Chain) have a \code{permit} that verifies no signature, so
+anyone can set any holder's allowance, that 76 of 116 R2 contracts bind no chain ID, that 29 of 1{,}151 R4 contracts (2.5\%) were deployed with a wrong chain ID
+(16 with zero), and that 7{,}438 of 7{,}651 decidable R8 contracts (97\%) keep their cached separator when the chain ID changes. Pattern matching works for
+syntactic rules (R2, R3, R5 and R9 reach 97--100\%) and fails when a rule encodes intent (R6 reaches 16\%), so we report such rules as review aids.
+
+%% =====================================================================
+\section{Limitations and Related Work}
+\textbf{Threats to validity.} \emph{Internal:} our front-end is lexical, so inheritance, wrappers, inline assembly and custom encodings cause
+false positives and negatives. Chain evidence bounds this error only where a domain or transaction is readable, a minority for R3, R5--R7 and R9,
+and clone-heavy families inflate counts (one family holds 44 of the 76 R2 contracts). \emph{Construct:} several rules approximate intent, because fixed chain
+IDs, cached separators and shared domains can be deliberate, and R4 and R7 are conditional by design. The mapping from the analyzer's categories to
+the ten classes is our documented interpretation. \emph{External:} we analyze verified Solidity on four chains, so unverified bytecode, other languages,
+standards and chains may differ, although the patterns are widely copied. \emph{Measurement:} balances and
+histories are snapshots, and R8 is verified on a local fork rather than on a live chain split. Findings are constraint violations, not proofs of
+exploitability.
+
+\textbf{Related work.} Slither~\cite{feist2019slither}, Oyente~\cite{luu2016making} and Securify~\cite{tsankov2018securify} target generic defect classes, and \tool{} adds standard-specific constraints on similar primitives. Pied-Piper checks backdoors in ERC tokens~\cite{li2022pied},
+and SymGPT audits contracts against ERC rules with symbolic execution and LLMs~\cite{xia2026symgpt}. SIGUARD, SigScope and OneSignature detect signature
+defects and replay~\cite{zhang2023siguard,meisami2025sigscope,wang2025one}, whereas \tool{} checks how the domain itself is built and confirms findings on the deployed contract. Table~\ref{tab:related-work-comparison} compares \tool{} with these works and with related studies of signature and cryptographic defects~\cite{wang2025copy,zhang2025demystifying,wang2026patterns}.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Comparison with related work. \CIRCLE: substantial coverage; \LEFTcircle: partial; \Circle: none.}
+\label{tab:related-work-comparison}
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{0.95}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+\textbf{Work} & \makecell[c]{\textbf{Permit,}\\\textbf{ECDSA}} & \makecell[c]{\textbf{Domain}\\\textbf{sep.}} & \makecell[c]{\textbf{Chain}\\\textbf{binding}} & \makecell[c]{\textbf{Verifier}\\\textbf{binding}} & \makecell[c]{\textbf{Domain}\\\textbf{freshness}} & \makecell[c]{\textbf{Logical}\\\textbf{domain}} & \makecell[c]{\textbf{On-chain}\\\textbf{validation}} \\
+\midrule
+SigScope~\cite{meisami2025sigscope}      & \CIRCLE & \Circle & \Circle & \Circle & \Circle & \Circle & \Circle \\
+Wang et al.~\cite{wang2025copy}          & \LEFTcircle & \Circle & \CIRCLE & \Circle & \Circle & \Circle & \Circle \\
+OneSignature~\cite{wang2025one}          & \CIRCLE & \Circle & \CIRCLE & \CIRCLE & \Circle & \Circle & \Circle \\
+Zhang et al.~\cite{zhang2025demystifying} & \LEFTcircle & \Circle & \LEFTcircle & \LEFTcircle & \Circle & \Circle & \Circle \\
+SIGUARD~\cite{zhang2023siguard}          & \LEFTcircle & \LEFTcircle & \Circle & \Circle & \Circle & \Circle & \Circle \\
+Wang et al.~\cite{wang2026patterns}      & \CIRCLE & \Circle & \CIRCLE & \CIRCLE & \Circle & \Circle & \Circle \\
+{\bfseries\itshape ERCAudit}             & \LEFTcircle & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+
+\section{Conclusion}
+We presented \tool{}, which makes ERC constraints executable and verifiable through one front-end, ten risk classes from replaceable rule sets, and an on-chain analysis that confirms or refutes each finding. In future work we plan a bytecode front-end for unverified contracts and re-labelled validation data for the final signing-domain rules.
+
+\appendices
+\section{Ethical Considerations}
+Only public contract code, verified sources and public chain data are used. The on-chain probes use read-only calls and local forks, and our exploit demonstrations ran on testnets with our own contracts, so no live contract was exploited. Findings are constraint violations, not proven exploits. Affected developers were notified, and addresses of contracts with unpatched high-severity findings will be redacted before the artifact is made public.
+
+\balance
+\bibliographystyle{IEEEtran}
+{\scriptsize\bibliography{refs}}
+
+\end{document}

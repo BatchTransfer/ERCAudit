@@ -1,0 +1,9 @@
+.venv
+.git
+**/__pycache__
+*.pyc
+paper
+video
+results/run_*/batchaudit.json
+results/run_*/domaudit.json
+results/run_*/txaudit.csv
