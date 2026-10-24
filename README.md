@@ -20,7 +20,7 @@ validates the findings on chain. One tool, one pipeline, one report, three analy
 
 Findings are **constraint violations, not proven exploits.**
 
-## Docker (no setup)
+## Docker
 
 ```bash
 docker build -t ercaudit .
